@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Observatorio de Sostenibilidad Ambiental · Marbella</title>
+<style>
+:root{
+  --bg:#f4f6f8; --panel:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e5e9ef;
+  --accent:#0f766e; --accent2:#16a34a; --good:#16a34a; --bad:#dc2626; --warn:#d97706;
+  --shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.06);
+  --z-mun:#0f766e; --z-d1:#2563eb; --z-d2:#d97706; --z-d3:#7c3aed; --z-d4:#db2777;
+  --radius:16px;
+}
+:root[data-theme="dark"]{
+  --bg:#0b1220; --panel:#121a2b; --ink:#e8eef7; --muted:#93a2ba; --line:#22304a;
+  --accent:#2dd4bf; --accent2:#4ade80;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg); color:var(--ink); line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+a{color:inherit}
+.wrap{max-width:1240px; margin:0 auto; padding:0 20px}
+
+/* Header */
+header{
+  position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.4) blur(8px);
+  background:color-mix(in srgb, var(--panel) 82%, transparent);
+  border-bottom:1px solid var(--line);
+}
+.head{display:flex; align-items:center; gap:16px; padding:14px 0}
+.brand{display:flex; align-items:center; gap:12px; min-width:0}
+.logo{
+  width:42px;height:42px;border-radius:12px;flex:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:grid;place-items:center;color:#fff;font-size:22px;box-shadow:var(--shadow);
+}
+.brand h1{font-size:16px;margin:0;font-weight:700;letter-spacing:-.2px;line-height:1.1}
+.brand p{font-size:12px;margin:2px 0 0;color:var(--muted)}
+.head-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chip{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 11px;white-space:nowrap;background:var(--panel)}
+.chip b{color:var(--ink)}
+.tbtn{cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;width:38px;height:34px;font-size:16px;display:grid;place-items:center}
+.tbtn:hover{border-color:var(--accent)}
+
+/* Sections */
+section{padding:30px 0}
+.sec-title{display:flex;align-items:baseline;gap:12px;margin:0 0 16px}
+.sec-title h2{font-size:19px;margin:0;font-weight:700;letter-spacing:-.3px}
+.sec-title span{font-size:13px;color:var(--muted)}
+
+/* KPI grid */
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi .k-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.kpi .k-name{font-size:12.5px;color:var(--muted);font-weight:600}
+.kpi .k-ic{font-size:18px;opacity:.9}
+.kpi .k-val{font-size:27px;font-weight:750;letter-spacing:-.5px;margin:8px 0 2px;font-variant-numeric:tabular-nums}
+.kpi .k-unit{font-size:12px;color:var(--muted);font-weight:600}
+.kpi .k-foot{display:flex;align-items:center;gap:8px;margin-top:10px}
+.trend{font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px}
+.trend.up{color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent)}
+.trend.down{color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent)}
+.trend.flat{color:var(--muted);background:color-mix(in srgb,var(--muted) 12%,transparent)}
+.kpi .k-sub{font-size:11px;color:var(--muted)}
+.spark{margin-top:8px}
+
+/* Explorer */
+.explorer{display:grid;grid-template-columns:280px 1fr;gap:20px}
+.catbox{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow);align-self:start}
+.cat h3{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:14px 8px 6px}
+.cat:first-child h3{margin-top:6px}
+.ibtn{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);
+  padding:8px 10px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:500}
+.ibtn:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.ibtn.active{background:color-mix(in srgb,var(--accent) 15%,transparent);font-weight:700}
+.ibtn .dot{width:9px;height:9px;border-radius:3px;flex:none}
+.chartcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);min-width:0}
+.chartcard .c-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.chartcard h3{margin:0;font-size:18px;font-weight:700;letter-spacing:-.3px}
+.chartcard .c-desc{font-size:12.5px;color:var(--muted);margin:3px 0 0;max-width:60ch}
+.stats{display:flex;gap:22px;flex-wrap:wrap;margin:2px 0 12px}
+.stat .s-l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.stat .s-v{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:6px 14px;flex-wrap:wrap;margin:10px 0 0}
+.leg{display:inline-flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;color:var(--muted);user-select:none;padding:3px 6px;border-radius:8px}
+.leg:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.leg .swatch{width:14px;height:4px;border-radius:2px}
+.leg.off{opacity:.35;text-decoration:line-through}
+.leg.on{color:var(--ink);font-weight:600}
+
+/* Beaches */
+.beachgrid{display:grid;grid-template-columns:1.15fr .85fr;gap:20px}
+.scrollY{max-height:520px;overflow-y:auto;padding-right:4px}
+.bnote{font-size:12px;color:var(--muted);margin:0 0 14px}
+
+/* Chart svg */
+svg{display:block;width:100%;height:auto;overflow:visible}
+.axis{stroke:var(--line);stroke-width:1}
+.grid{stroke:var(--line);stroke-width:1;stroke-dasharray:2 4;opacity:.7}
+.tick{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.serie{fill:none;stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round}
+.serie.mun{stroke-width:3.4}
+.dotv{fill:var(--panel);stroke-width:2}
+.tip{position:fixed;pointer-events:none;z-index:99;background:var(--ink);color:var(--bg);
+  font-size:12px;padding:9px 11px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;transition:opacity .08s;max-width:260px}
+.tip b{font-size:12.5px}
+.tip .row{display:flex;align-items:center;gap:7px;margin-top:4px;font-variant-numeric:tabular-nums}
+.tip .row i{width:9px;height:9px;border-radius:3px;display:inline-block;flex:none}
+.vline{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+.bar-label{fill:var(--ink);font-size:11.5px;font-variant-numeric:tabular-nums}
+.bar-name{fill:var(--ink);font-size:12px}
+
+footer{border-top:1px solid var(--line);padding:26px 0;color:var(--muted);font-size:12.5px;margin-top:20px}
+footer b{color:var(--ink)}
+
+@media(max-width:920px){
+  .explorer{grid-template-columns:1fr}
+  .catbox{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px}
+  .beachgrid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap head">
+    <div class="brand">
+      <div class="logo">🌿</div>
+      <div>
+        <h1>Observatorio de Sostenibilidad Ambiental · Marbella</h1>
+        <p>Calidad ambiental del destino turístico · Teledetección Dinapsis · Agenda Urbana 2030</p>
+      </div>
+    </div>
+    <div class="head-right">
+      <span class="chip">Periodo <b id="chPer">—</b></span>
+      <span class="chip"><b id="chN">—</b> registros · <b>16</b> indicadores</span>
+      <button class="tbtn" id="themeBtn" title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section id="kpisec">
+    <div class="sec-title"><h2>Panorama del municipio</h2><span>último dato disponible · variación interanual</span></div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section id="expsec">
+    <div class="sec-title"><h2>Explorador de indicadores</h2><span>selecciona un indicador · compara municipio y distritos</span></div>
+    <div class="explorer">
+      <div class="catbox" id="catbox"></div>
+      <div class="chartcard">
+        <div class="c-head">
+          <div>
+            <h3 id="cTitle">—</h3>
+            <p class="c-desc" id="cDesc">—</p>
+          </div>
+        </div>
+        <div class="stats" id="cStats"></div>
+        <div id="cChart"></div>
+        <div class="legend" id="cLegend"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="beachsec">
+    <div class="sec-title"><h2>Costa · Línea de playa</h2><span>evolución de la posición de la orilla (m) · 28 playas</span></div>
+    <p class="bnote">Valores positivos = avance/acumulación de arena; negativos = retroceso/erosión respecto a la referencia. Pulsa una playa para ver su serie temporal.</p>
+    <div class="beachgrid">
+      <div class="chartcard">
+        <h3 style="font-size:15px;margin:0 0 4px">Estado actual por playa <span id="bDate" style="color:var(--muted);font-weight:500;font-size:12px"></span></h3>
+        <div class="scrollY" id="bBars"></div>
+      </div>
+      <div class="chartcard">
+        <h3 style="font-size:15px;margin:0 0 4px" id="bTitle">Serie temporal</h3>
+        <p class="c-desc" id="bDesc">Selecciona una playa en la lista.</p>
+        <div id="bChart"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <b>Fuente:</b> Indicadores ambientales de teledetección (Dinapsis / Hidralia) para el marco de la Agenda Urbana 2030 · Ayuntamiento de Marbella (DTI).
+    Datos: hoja <i>Marbella_indicadores</i>. Panel elaborado para el observatorio de sostenibilidad del destino.
+    <br>Los indicadores de depuración de aire (NO₂, PM₂,₅, SO₂, CO₂) reflejan la cantidad <b>eliminada/absorbida por la vegetación</b>, no la emisión.
+  </div>
+</footer>
+
+<div class="tip" id="tip"></div>
+
+<script src="data.js"></script>
+<script>
+"use strict";
+
+/* ---------- Configuración de indicadores ---------- */
+const CATS = {
+  verde:     {label:"Verde urbano",   color:"#16a34a"},
+  aire:      {label:"Depuración de aire", color:"#0891b2"},
+  clima:     {label:"Clima urbano",   color:"#ea580c"},
+  territorio:{label:"Territorio",     color:"#6366f1"},
+};
+const IND = {
+  cobveg:  {name:"Cobertura vegetal", unit:"%", cat:"verde", dir:"up", dec:1, ic:"🌳",
+            desc:"Porcentaje de suelo cubierto por vegetación. A más cobertura, mayor confort térmico y calidad paisajística del destino."},
+  verdehab:{name:"Superficie verde por habitante", unit:"m²/hab", cat:"verde", dir:"up", dec:0, ic:"🌱",
+            desc:"Metros cuadrados de cobertura verde por habitante. Referencia OMS deseable: ≥ 10–15 m²/hab."},
+  calveg:  {name:"Calidad de la vegetación", unit:"índice", cat:"verde", dir:"up", dec:2, ic:"🍃",
+            desc:"Índice de vigor/estado de la vegetación (0–1). Valores altos indican masa vegetal sana."},
+  humveg:  {name:"Humedad de la vegetación", unit:"índice", cat:"verde", dir:"up", dec:3, ic:"💧",
+            desc:"Índice de humedad de las superficies vegetales. Cae en episodios de sequía y estrés hídrico."},
+  co2:     {name:"Absorción de CO₂ por vegetación", unit:"t CO₂/mes", cat:"verde", dir:"up", dec:0, ic:"🌍",
+            desc:"Toneladas de CO₂ absorbidas mensualmente por la vegetación del ámbito."},
+  no2:     {name:"NO₂ eliminado por vegetación", unit:"kg/mes", cat:"aire", dir:"up", dec:0, ic:"💨",
+            desc:"Kilogramos de NO₂ retirados de la atmósfera por la vegetación cada mes."},
+  pm25:    {name:"PM₂,₅ eliminado por vegetación", unit:"kg/mes", cat:"aire", dir:"up", dec:1, ic:"🌫️",
+            desc:"Partículas finas PM₂,₅ capturadas por la vegetación. Buen proxy de servicio de limpieza del aire."},
+  so2:     {name:"SO₂ eliminado por vegetación", unit:"kg/mes", cat:"aire", dir:"up", dec:0, ic:"🏭",
+            desc:"Kilogramos de SO₂ retirados por la vegetación cada mes."},
+  tempsup: {name:"Temperatura superficial", unit:"°C", cat:"clima", dir:"down", dec:1, ic:"🌡️",
+            desc:"Temperatura de la superficie del terreno (LST). Clave para detectar sobrecalentamiento urbano."},
+  isla:    {name:"Riesgo de isla de calor (UTFVI)", unit:"índice", cat:"clima", dir:"down", dec:3, ic:"🔥",
+            desc:"Índice UTFVI de isla de calor urbana. Valores más bajos = menor riesgo térmico."},
+  alttemp: {name:"Superficie con altas temperaturas", unit:"ha", cat:"clima", dir:"down", dec:0, ic:"♨️",
+            desc:"Hectáreas afectadas por temperaturas superficiales elevadas."},
+  albedo:  {name:"Albedo", unit:"índice", cat:"clima", dir:"up", dec:3, ic:"☀️",
+            desc:"Reflectividad de la superficie. Un albedo mayor refleja más radiación y reduce el calentamiento."},
+  sellado: {name:"Suelo sellado", unit:"%", cat:"territorio", dir:"down", dec:1, ic:"🧱",
+            desc:"Porcentaje de suelo impermeabilizado (edificación, pavimento). A menos sellado, mejor drenaje y menos calor."},
+  compac:  {name:"Compacidad absoluta", unit:"%", cat:"territorio", dir:"up", dec:1, ic:"🏙️",
+            desc:"Compacidad del tejido urbano. Una ciudad más compacta consume menos suelo y territorio."},
+  lumin:   {name:"Contaminación lumínica", unit:"radiancia", cat:"territorio", dir:"down", dec:1, ic:"🌙",
+            desc:"Brillo nocturno emitido. Menos contaminación lumínica protege el cielo y la biodiversidad."},
+};
+const ZCOL = {"Municipio":"var(--z-mun)","Distrito 01":"var(--z-d1)","Distrito 02":"var(--z-d2)","Distrito 03":"var(--z-d3)","Distrito 04":"var(--z-d4)"};
+const ZONES_MAIN = ["Municipio","Distrito 01","Distrito 02","Distrito 03","Distrito 04"];
+const MONTHS=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+
+/* ---------- Índice de datos ---------- */
+// OBS = {fechas, zonas, units, rec:[[fIdx, code, zIdx, v], ...]}
+const F = OBS.fechas, Z = OBS.zonas;
+// series[code][zoneName] = [{fi, v}]
+const SER = {};
+for(const [fi,code,zi,v] of OBS.rec){
+  (SER[code] ||= {});
+  (SER[code][Z[zi]] ||= []).push({fi, v});
+}
+for(const c in SER) for(const z in SER[c]) SER[c][z].sort((a,b)=>a.fi-b.fi);
+
+const fmtDate = fi => { const d=F[fi].split("-"); return MONTHS[+d[1]-1]+" "+d[0]; };
+const nf = (v,dec)=> v==null?"—":Number(v).toLocaleString("es-ES",{minimumFractionDigits:dec,maximumFractionDigits:dec});
+
+/* ---------- Header chips ---------- */
+document.getElementById("chPer").textContent = fmtDate(0)+" – "+fmtDate(F.length-1);
+document.getElementById("chN").textContent = OBS.rec.length.toLocaleString("es-ES");
+
+/* ---------- Tooltip helper ---------- */
+const tip=document.getElementById("tip");
+function showTip(html,x,y){tip.innerHTML=html;tip.style.opacity=1;
+  let tx=x+14, ty=y+14; const w=tip.offsetWidth,h=tip.offsetHeight;
+  if(tx+w>innerWidth-8) tx=x-w-14; if(ty+h>innerHeight-8) ty=y-h-14;
+  tip.style.left=tx+"px";tip.style.top=ty+"px";}
+function hideTip(){tip.style.opacity=0;}
+
+/* ---------- Generic line chart (multi-series) ---------- */
+function lineChart(el, series, opts){
+  // series: [{name, color, data:[{fi,v}], width, mainKey}]
+  opts=opts||{};
+  const W=720, H=340, m={t:14,r:18,b:34,l:56};
+  const iw=W-m.l-m.r, ih=H-m.t-m.b;
+  const allFi = [...new Set(series.flatMap(s=>s.data.map(d=>d.fi)))].sort((a,b)=>a-b);
+  if(!allFi.length){el.innerHTML="<p class='c-desc'>Sin datos.</p>";return;}
+  const fiMin=allFi[0], fiMax=allFi[allFi.length-1];
+  let vals=series.flatMap(s=>s.data.map(d=>d.v));
+  let vMin=Math.min(...vals), vMax=Math.max(...vals);
+  if(vMin===vMax){vMax+=1;vMin-=1;}
+  const pad=(vMax-vMin)*0.08; vMin-=pad; vMax+=pad;
+  if(opts.zeroBase && vMin>0) vMin=0;
+  const X=fi=> m.l + (fiMax===fiMin?iw/2:(fi-fiMin)/(fiMax-fiMin)*iw);
+  const Y=v=> m.t + ih - (v-vMin)/(vMax-vMin)*ih;
+
+  // y ticks
+  const nY=5; let yt="";
+  for(let i=0;i<=nY;i++){const v=vMin+(vMax-vMin)*i/nY; const y=Y(v);
+    yt+=`<line class="grid" x1="${m.l}" y1="${y}" x2="${W-m.r}" y2="${y}"/>`+
+        `<text class="tick" x="${m.l-8}" y="${y+4}" text-anchor="end">${nf(v, opts.dec??1)}</text>`;}
+  // x ticks: enero de cada año
+  let xt="";
+  allFi.forEach(fi=>{ if(F[fi].slice(5)==="01-01"){ const x=X(fi);
+    xt+=`<line class="grid" x1="${x}" y1="${m.t}" x2="${x}" y2="${m.t+ih}"/>`+
+        `<text class="tick" x="${x}" y="${H-12}" text-anchor="middle">${F[fi].slice(0,4)}</text>`;}});
+
+  let paths="";
+  series.forEach(s=>{
+    const pts=s.data.map(d=>[X(d.fi),Y(d.v)]);
+    const dd=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+    const cvar=s.color;
+    paths+=`<path class="serie ${s.mainKey?'mun':''}" data-n="${s.name}" style="stroke:${cvar}" d="${dd}"/>`;
+  });
+
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="gráfica de líneas">
+    <line class="axis" x1="${m.l}" y1="${m.t+ih}" x2="${W-m.r}" y2="${m.t+ih}"/>
+    ${yt}${xt}${paths}
+    <line class="vline" id="vln" x1="0" y1="${m.t}" x2="0" y2="${m.t+ih}" style="opacity:0"/>
+    <g id="hdots"></g>
+    <rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent" id="hit"/>
+  </svg>`;
+
+  const svg=el.querySelector("svg"), vln=el.querySelector("#vln"), hdots=el.querySelector("#hdots"), hit=el.querySelector("#hit");
+  hit.addEventListener("mousemove",ev=>{
+    const r=svg.getBoundingClientRect(); const sx=(ev.clientX-r.left)/r.width*W;
+    // nearest fi
+    let best=allFi[0],bd=1e9;
+    allFi.forEach(fi=>{const d=Math.abs(X(fi)-sx); if(d<bd){bd=d;best=fi;}});
+    const x=X(best);
+    vln.setAttribute("x1",x);vln.setAttribute("x2",x);vln.style.opacity=1;
+    let dots="",rows="";
+    series.forEach(s=>{const p=s.data.find(d=>d.fi===best); if(!p)return;
+      const y=Y(p.v);
+      dots+=`<circle class="dotv" cx="${x}" cy="${y}" r="4.5" style="stroke:${s.color}"/>`;
+      rows+=`<div class="row"><i style="background:${s.color}"></i>${s.name}: <b>${nf(p.v,opts.dec??1)}</b> ${opts.unit||""}</div>`;});
+    hdots.innerHTML=dots;
+    showTip(`<b>${fmtDate(best)}</b>${rows}`,ev.clientX,ev.clientY);
+  });
+  hit.addEventListener("mouseleave",()=>{vln.style.opacity=0;hdots.innerHTML="";hideTip();});
+}
+
+/* ---------- KPIs ---------- */
+const KPI_LIST=["cobveg","verdehab","sellado","tempsup","isla","co2"];
+function sparkline(data){
+  const W=160,H=38,p=3;
+  const vs=data.map(d=>d.v); let mn=Math.min(...vs),mx=Math.max(...vs); if(mn===mx){mx+=1;mn-=1;}
+  const X=i=>p+i/(data.length-1)*(W-2*p), Y=v=>H-p-(v-mn)/(mx-mn)*(H-2*p);
+  const dd=data.map((d,i)=>(i?"L":"M")+X(i).toFixed(1)+" "+Y(d.v).toFixed(1)).join(" ");
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:38px">
+    <path d="${dd}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="${X(data.length-1)}" cy="${Y(vs[vs.length-1])}" r="2.6" fill="var(--accent)"/></svg>`;
+}
+function buildKPIs(){
+  const box=document.getElementById("kpis"); box.innerHTML="";
+  KPI_LIST.forEach(code=>{
+    const cfg=IND[code], s=SER[code]["Municipio"]; if(!s||!s.length)return;
+    const last=s[s.length-1];
+    // interanual: mismo mes, año anterior (12 registros mensuales atrás por fecha)
+    const lastDate=F[last.fi]; const py=(+lastDate.slice(0,4)-1)+lastDate.slice(4);
+    const pyFi=F.indexOf(py); const prev=pyFi>=0? s.find(d=>d.fi===pyFi):null;
+    let trend="",sub="serie disponible";
+    if(prev){
+      const diff=last.v-prev.v; const pct=prev.v!==0?diff/Math.abs(prev.v)*100:0;
+      const improving = cfg.dir==="up"? diff>0 : diff<0;
+      const cls = Math.abs(pct)<0.5?"flat":(improving?"up":"down");
+      const arrow = diff>0?"▲":(diff<0?"▼":"■");
+      trend=`<span class="trend ${cls}">${arrow} ${nf(Math.abs(pct),1)}%</span>`;
+      sub=`vs ${fmtDate(pyFi)}`;
+    }
+    const el=document.createElement("div"); el.className="kpi";
+    el.innerHTML=`<div class="k-top"><span class="k-name">${cfg.name}</span><span class="k-ic">${cfg.ic}</span></div>
+      <div class="k-val">${nf(last.v,cfg.dec)}</div><span class="k-unit">${cfg.unit} · ${fmtDate(last.fi)}</span>
+      <div class="k-foot">${trend}<span class="k-sub">${sub}</span></div>
+      ${sparkline(s.slice(-24))}`;
+    box.appendChild(el);
+  });
+}
+
+/* ---------- Explorer ---------- */
+let activeCode=null, legendState={};
+function buildCatbox(){
+  const box=document.getElementById("catbox"); box.innerHTML="";
+  Object.entries(CATS).forEach(([ck,cv])=>{
+    const div=document.createElement("div"); div.className="cat";
+    div.innerHTML=`<h3>${cv.label}</h3>`;
+    Object.entries(IND).filter(([,c])=>c.cat===ck).forEach(([code,cfg])=>{
+      const b=document.createElement("button"); b.className="ibtn"; b.dataset.code=code;
+      b.innerHTML=`<span class="dot" style="background:${cv.color}"></span>${cfg.name}`;
+      b.addEventListener("click",()=>selectIndicator(code));
+      div.appendChild(b);
+    });
+    box.appendChild(div);
+  });
+}
+function selectIndicator(code){
+  activeCode=code; const cfg=IND[code];
+  document.querySelectorAll(".ibtn").forEach(b=>b.classList.toggle("active",b.dataset.code===code));
+  document.getElementById("cTitle").textContent=cfg.name+"  ("+cfg.unit+")";
+  document.getElementById("cDesc").textContent=cfg.desc;
+  // zonas disponibles para este indicador
+  const zonesAvail=ZONES_MAIN.filter(z=>SER[code][z]&&SER[code][z].length);
+  legendState[code] ||= Object.fromEntries(zonesAvail.map(z=>[z,true]));
+  drawExplorer();
+  buildLegend(code,zonesAvail);
+  buildStats(code);
+}
+function drawExplorer(){
+  const code=activeCode,cfg=IND[code];
+  const series=ZONES_MAIN.filter(z=>SER[code][z]&&SER[code][z].length && legendState[code][z])
+    .map(z=>({name:z,color:ZCOL[z],data:SER[code][z],mainKey:z==="Municipio"}));
+  lineChart(document.getElementById("cChart"),series,{unit:cfg.unit,dec:cfg.dec,zeroBase:["%","kg/mes","t CO₂/mes","ha","m²/hab"].includes(cfg.unit)});
+}
+function buildLegend(code,zones){
+  const lg=document.getElementById("cLegend"); lg.innerHTML="";
+  zones.forEach(z=>{
+    const on=legendState[code][z];
+    const s=document.createElement("span"); s.className="leg "+(on?"on":"off");
+    s.innerHTML=`<span class="swatch" style="background:${ZCOL[z]}"></span>${z}`;
+    s.addEventListener("click",()=>{legendState[code][z]=!legendState[code][z]; drawExplorer(); buildLegend(code,zones);});
+    lg.appendChild(s);
+  });
+}
+function buildStats(code){
+  const cfg=IND[code], s=SER[code]["Municipio"]||[];
+  const vs=s.map(d=>d.v);
+  const box=document.getElementById("cStats");
+  if(!vs.length){box.innerHTML="";return;}
+  const avg=vs.reduce((a,b)=>a+b,0)/vs.length;
+  const stats=[["Último",nf(s[s.length-1].v,cfg.dec)],["Media",nf(avg,cfg.dec)],
+    ["Mínimo",nf(Math.min(...vs),cfg.dec)],["Máximo",nf(Math.max(...vs),cfg.dec)]];
+  box.innerHTML=stats.map(([l,v])=>`<div class="stat"><div class="s-l">${l} (municipio)</div><div class="s-v">${v}</div></div>`).join("");
+}
+
+/* ---------- Beaches ---------- */
+const beachZones = Z.filter(z=>/^Playa/i.test(z) && z!=="Playas Marbella");
+function buildBeaches(){
+  // estado actual: último valor por playa
+  const rows = beachZones.map(z=>{
+    const s=SER["playa"][z]; if(!s||!s.length)return null;
+    return {z, v:s[s.length-1].v, fi:s[s.length-1].fi, s};
+  }).filter(Boolean).sort((a,b)=>b.v-a.v);
+  if(rows.length) document.getElementById("bDate").textContent="· "+fmtDate(Math.max(...rows.map(r=>r.fi)));
+  const maxAbs=Math.max(...rows.map(r=>Math.abs(r.v)),1);
+  const W=520, rowH=26, padL=150, padR=54, iw=W-padL-padR, x0=padL+iw/2;
+  const H=rows.length*rowH+10;
+  const X=v=>x0 + v/maxAbs*(iw/2);
+  let bars="";
+  rows.forEach((r,i)=>{
+    const y=8+i*rowH, xv=X(r.v), pos=r.v>=0;
+    const col=pos?"var(--good)":"var(--bad)";
+    const name=r.z.replace(/^Playa (de |del |de la |el |los )?/i,"");
+    bars+=`<g class="brow" data-z="${r.z}" style="cursor:pointer">
+      <rect x="0" y="${y-9}" width="${W}" height="${rowH-4}" fill="transparent"/>
+      <text class="bar-name" x="${padL-8}" y="${y+4}" text-anchor="end">${name}</text>
+      <rect x="${pos?x0:xv}" y="${y-6}" width="${Math.max(1,Math.abs(xv-x0))}" height="12" rx="3" fill="${col}"/>
+      <text class="bar-label" x="${pos?xv+5:xv-5}" y="${y+4}" text-anchor="${pos?'start':'end'}" fill="${col}">${nf(r.v,1)}</text>
+    </g>`;
+  });
+  const el=document.getElementById("bBars");
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="height:${H}px">
+    <line class="axis" x1="${x0}" y1="0" x2="${x0}" y2="${H}" style="stroke-dasharray:2 3"/>
+    ${bars}</svg>`;
+  el.querySelectorAll(".brow").forEach(g=>{
+    g.addEventListener("click",()=>selectBeach(g.dataset.z));
+    g.addEventListener("mouseenter",e=>{const z=g.dataset.z;const r=rows.find(x=>x.z===z);
+      showTip(`<b>${z}</b><div class="row">Posición: <b>${nf(r.v,1)} m</b></div>`,e.clientX,e.clientY);});
+    g.addEventListener("mousemove",e=>{const z=g.dataset.z;const r=rows.find(x=>x.z===z);
+      showTip(`<b>${z}</b><div class="row">Posición: <b>${nf(r.v,1)} m</b></div>`,e.clientX,e.clientY);});
+    g.addEventListener("mouseleave",hideTip);
+  });
+  if(rows.length) selectBeach(rows[0].z);
+}
+function selectBeach(z){
+  document.getElementById("bTitle").textContent=z;
+  const s=SER["playa"][z]||[];
+  const vs=s.map(d=>d.v);
+  document.getElementById("bDesc").innerHTML = s.length
+    ? `Rango ${nf(Math.min(...vs),1)} a ${nf(Math.max(...vs),1)} m · ${s.length} meses`
+    : "Sin datos.";
+  lineChart(document.getElementById("bChart"),[{name:z,color:"var(--z-mun)",data:s,mainKey:true}],{unit:"m",dec:1});
+}
+
+/* ---------- Theme ---------- */
+const themeBtn=document.getElementById("themeBtn");
+function applyTheme(t){document.documentElement.dataset.theme=t; themeBtn.textContent=t==="dark"?"☀️":"🌙";
+  try{localStorage.setItem("obsTheme",t)}catch(e){}
+  // redibujar para refrescar var(--color) resueltos en SVG dots
+  if(activeCode) drawExplorer();
+}
+themeBtn.addEventListener("click",()=>applyTheme(document.documentElement.dataset.theme==="dark"?"light":"dark"));
+(function(){let t="light";try{t=localStorage.getItem("obsTheme")|| (matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light")}catch(e){} applyTheme(t);})();
+
+/* ---------- Init ---------- */
+buildKPIs();
+buildCatbox();
+selectIndicator("cobveg");
+buildBeaches();
+</script>
+</body>
+</html>
