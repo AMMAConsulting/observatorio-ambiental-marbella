@@ -430,3 +430,188 @@ buildCatbox();
 selectIndicator("cobveg");
 buildEmbalse();
 buildBeaches();
+
+/* ================= DATOS EN VIVO · Open-Meteo (CORS, sin clave) ================= */
+const MB_LAT=36.5101, MB_LON=-4.8824;
+
+function aqiInfo(v){
+  if(v==null) return {label:"—",color:"var(--muted)"};
+  if(v<=20)  return {label:"Buena",color:"#16a34a"};
+  if(v<=40)  return {label:"Razonable",color:"#84cc16"};
+  if(v<=60)  return {label:"Moderada",color:"#d97706"};
+  if(v<=80)  return {label:"Pobre",color:"#dc2626"};
+  if(v<=100) return {label:"Muy pobre",color:"#9333ea"};
+  return {label:"Extrem. pobre",color:"#7c2d12"};
+}
+
+/* Gráfica de líneas genérica por índice, con hover multi-serie */
+function lineChartG(el, labels, series, opts){
+  opts=opts||{};
+  const W=920,H=320,m={t:14,r:18,b:34,l:54};
+  const iw=W-m.l-m.r, ih=H-m.t-m.b, n=labels.length;
+  let vals=series.flatMap(s=>s.values.filter(v=>v!=null));
+  if(!n||!vals.length){el.innerHTML="<p class='c-desc'>Sin datos disponibles.</p>";return;}
+  let vMin=Math.min(...vals), vMax=Math.max(...vals);
+  if(vMin===vMax){vMax+=1;vMin-=1;}
+  if(opts.zeroBase!==false && vMin>0) vMin=0;
+  vMax+=(vMax-vMin)*0.08;
+  const X=i=> m.l + (n<=1?iw/2:i/(n-1)*iw);
+  const Y=v=> m.t + ih - (v-vMin)/(vMax-vMin)*ih;
+  const nY=5; let yt="";
+  for(let i=0;i<=nY;i++){const v=vMin+(vMax-vMin)*i/nY,y=Y(v);
+    yt+=`<line class="grid" x1="${m.l}" y1="${y.toFixed(1)}" x2="${W-m.r}" y2="${y.toFixed(1)}"/>`+
+        `<text class="tick" x="${m.l-8}" y="${(y+4).toFixed(1)}" text-anchor="end">${nf(v,opts.dec??0)}</text>`;}
+  let xt=""; (opts.xticks||[]).forEach(t=>{const x=X(t.i);
+    xt+=`<text class="tick" x="${x.toFixed(1)}" y="${H-12}" text-anchor="middle">${t.label}</text>`;});
+  let paths="";
+  series.forEach(s=>{ let d="",st=false;
+    s.values.forEach((v,i)=>{ if(v==null){st=false;return;} d+=(st?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1)+" "; st=true;});
+    paths+=`<path class="serie" style="stroke:${s.color};stroke-width:${s.width||2.2}" d="${d}"/>`;});
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="serie temporal">
+    <line class="axis" x1="${m.l}" y1="${m.t+ih}" x2="${W-m.r}" y2="${m.t+ih}"/>
+    ${yt}${xt}${paths}
+    <line class="vline" id="gv" x1="0" y1="${m.t}" x2="0" y2="${m.t+ih}" style="opacity:0"/>
+    <g id="gd"></g>
+    <rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent" id="gh"/></svg>`;
+  const svg=el.querySelector("svg"),vln=el.querySelector("#gv"),dot=el.querySelector("#gd"),hit=el.querySelector("#gh");
+  hit.addEventListener("mousemove",ev=>{
+    const rc=svg.getBoundingClientRect(); const sx=(ev.clientX-rc.left)/rc.width*W;
+    let i=Math.round((sx-m.l)/iw*(n-1)); i=Math.max(0,Math.min(n-1,i));
+    const x=X(i); vln.setAttribute("x1",x);vln.setAttribute("x2",x);vln.style.opacity=1;
+    let dots="",rows="";
+    series.forEach(s=>{const v=s.values[i]; if(v==null)return; const y=Y(v);
+      dots+=`<circle class="dotv" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" style="stroke:${s.color}"/>`;
+      rows+=`<div class="row"><i style="background:${s.color}"></i>${s.name}: <b>${nf(v,opts.dec??0)}${opts.unit?" "+opts.unit:""}</b></div>`;});
+    dot.innerHTML=dots;
+    showTip(`<b>${labels[i]}</b>${rows}`,ev.clientX,ev.clientY);
+  });
+  hit.addEventListener("mouseleave",()=>{vln.style.opacity=0;dot.innerHTML="";hideTip();});
+}
+
+/* Gráfica de barras verticales (una serie) */
+function barChartG(el, bars, opts){
+  opts=opts||{};
+  const W=920,H=300,m={t:16,r:16,b:34,l:52};
+  const iw=W-m.l-m.r, ih=H-m.t-m.b, n=bars.length;
+  if(!n){el.innerHTML="<p class='c-desc'>Sin datos.</p>";return;}
+  const vMax=Math.max(...bars.map(b=>b.v),1)*1.12, vMin=0;
+  const X=i=> m.l + (i+0.5)/n*iw, bw=iw/n*0.62;
+  const Y=v=> m.t + ih - (v-vMin)/(vMax-vMin)*ih;
+  const nY=5; let yt="";
+  for(let i=0;i<=nY;i++){const v=vMin+(vMax-vMin)*i/nY,y=Y(v);
+    yt+=`<line class="grid" x1="${m.l}" y1="${y.toFixed(1)}" x2="${W-m.r}" y2="${y.toFixed(1)}"/>`+
+        `<text class="tick" x="${m.l-8}" y="${(y+4).toFixed(1)}" text-anchor="end">${nf(v,0)}</text>`;}
+  let rects="";
+  bars.forEach((b,i)=>{const x=X(i),y=Y(b.v);
+    rects+=`<rect x="${(x-bw/2).toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${(m.t+ih-y).toFixed(1)}" rx="3" fill="${opts.color||'var(--accent)'}" opacity="${b.dim?0.4:0.85}"/>`+
+      `<text class="tick" x="${x.toFixed(1)}" y="${H-12}" text-anchor="middle">${b.label}</text>`;
+    if(opts.showVal) rects+=`<text class="bar-label" x="${x.toFixed(1)}" y="${(y-5).toFixed(1)}" text-anchor="middle">${nf(b.v,0)}</text>`;});
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="barras anuales">
+    <line class="axis" x1="${m.l}" y1="${m.t+ih}" x2="${W-m.r}" y2="${m.t+ih}"/>${yt}${rects}</svg>`;
+}
+
+/* Estacionalidad: barras (media mensual) + línea (año en curso) */
+function rainSeasonChart(el, clim, cur, curYear){
+  const W=920,H=300,m={t:16,r:16,b:34,l:52};
+  const iw=W-m.l-m.r, ih=H-m.t-m.b, n=12;
+  const vMax=Math.max(...clim, ...cur.filter(v=>v!=null),1)*1.14, vMin=0;
+  const X=i=> m.l + (i+0.5)/n*iw, bw=iw/n*0.58;
+  const Y=v=> m.t + ih - (v-vMin)/(vMax-vMin)*ih;
+  const nY=5; let yt="";
+  for(let i=0;i<=nY;i++){const v=vMin+(vMax-vMin)*i/nY,y=Y(v);
+    yt+=`<line class="grid" x1="${m.l}" y1="${y.toFixed(1)}" x2="${W-m.r}" y2="${y.toFixed(1)}"/>`+
+        `<text class="tick" x="${m.l-8}" y="${(y+4).toFixed(1)}" text-anchor="end">${nf(v,0)}</text>`;}
+  const ML=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+  let rects=""; clim.forEach((v,i)=>{const x=X(i),y=Y(v);
+    rects+=`<rect x="${(x-bw/2).toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${(m.t+ih-y).toFixed(1)}" rx="3" fill="var(--accent)" opacity="0.26"/>`+
+      `<text class="tick" x="${x.toFixed(1)}" y="${H-12}" text-anchor="middle">${ML[i]}</text>`;});
+  let d="",st=false; cur.forEach((v,i)=>{ if(v==null){st=false;return;} d+=(st?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1)+" "; st=true;});
+  const line=`<path class="serie" style="stroke:var(--accent2);stroke-width:2.6" d="${d}"/>`;
+  const dots=cur.map((v,i)=>v==null?"":`<circle class="dotv" cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="3.5" style="stroke:var(--accent2)"/>`).join("");
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="estacionalidad pluviométrica">
+    <line class="axis" x1="${m.l}" y1="${m.t+ih}" x2="${W-m.r}" y2="${m.t+ih}"/>${yt}${rects}${line}${dots}</svg>`;
+}
+
+/* ---- Calidad del aire (Open-Meteo Air Quality · CAMS) ---- */
+async function loadAirQuality(){
+  const note=document.getElementById("airNote");
+  try{
+    const url=`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${MB_LAT}&longitude=${MB_LON}`+
+      `&hourly=pm10,pm2_5,nitrogen_dioxide,ozone,european_aqi&past_days=92&forecast_days=1&timezone=Europe%2FMadrid`;
+    const r=await fetch(url); if(!r.ok) throw new Error("HTTP "+r.status);
+    const h=(await r.json()).hourly;
+    const lastVal=arr=>{for(let k=arr.length-1;k>=0;k--) if(arr[k]!=null) return arr[k]; return null;};
+    const aqi=lastVal(h.european_aqi), info=aqiInfo(aqi);
+    const kdef=[
+      {name:"AQI europeo", val:aqi==null?"—":nf(aqi,0), unit:info.label+" · ahora", color:info.color},
+      {name:"PM2,5",       val:nf(lastVal(h.pm2_5),1),  unit:"µg/m³"},
+      {name:"PM10",        val:nf(lastVal(h.pm10),1),   unit:"µg/m³"},
+      {name:"NO₂",         val:nf(lastVal(h.nitrogen_dioxide),1), unit:"µg/m³"},
+      {name:"O₃",          val:nf(lastVal(h.ozone),1),  unit:"µg/m³"},
+    ];
+    document.getElementById("airKpis").innerHTML=kdef.map(k=>
+      `<div class="kpi"><div class="k-top"><span class="k-name">${k.name}</span></div>`+
+      `<div class="k-val"${k.color?` style="color:${k.color}"`:""}>${k.val}</div><span class="k-unit">${k.unit}</span></div>`).join("");
+    // agregación a media diaria
+    const idxByDay={}; h.time.forEach((t,i)=>{const day=t.slice(0,10);(idxByDay[day]||(idxByDay[day]=[])).push(i);});
+    const days=Object.keys(idxByDay).sort();
+    const mean=a=>{const f=a.filter(v=>v!=null);return f.length?f.reduce((x,y)=>x+y,0)/f.length:null;};
+    const dayMean=field=>days.map(day=>mean(idxByDay[day].map(i=>h[field][i])));
+    const labels=days.map(day=>{const p=day.split("-");return (+p[2])+" "+MONTHS[+p[1]-1];});
+    const series=[
+      {name:"PM2,5",color:"#dc2626",values:dayMean("pm2_5")},
+      {name:"PM10", color:"#d97706",values:dayMean("pm10")},
+      {name:"NO₂",  color:"#2563eb",values:dayMean("nitrogen_dioxide")},
+      {name:"O₃",   color:"#7c3aed",values:dayMean("ozone")},
+    ];
+    const xticks=[]; days.forEach((day,i)=>{ if(day.slice(8,10)==="01") xticks.push({i,label:MONTHS[+day.slice(5,7)-1]}); });
+    document.getElementById("airLegend").innerHTML=series.map(s=>`<span class="leg on"><span class="swatch" style="background:${s.color}"></span>${s.name}</span>`).join("");
+    lineChartG(document.getElementById("airChart"),labels,series,{unit:"µg/m³",dec:1,xticks});
+    note.innerHTML=`Última medida: <b>${labels[labels.length-1]||"—"}</b> · Marbella (36,51°N · 4,88°O). Escala AQI europeo: 0–20 buena · 20–40 razonable · 40–60 moderada · 60–80 pobre · +80 muy pobre.`;
+  }catch(e){ note.textContent="No se pudo cargar la calidad del aire: "+e.message; note.style.color="var(--bad)"; }
+}
+
+/* ---- Pluviometría (Open-Meteo Archive · ERA5) ---- */
+async function loadRain(){
+  try{
+    const end=new Date(); end.setDate(end.getDate()-6);
+    const ed=end.toISOString().slice(0,10);
+    const url=`https://archive-api.open-meteo.com/v1/archive?latitude=${MB_LAT}&longitude=${MB_LON}`+
+      `&start_date=2015-01-01&end_date=${ed}&daily=precipitation_sum&timezone=Europe%2FMadrid`;
+    const r=await fetch(url); if(!r.ok) throw new Error("HTTP "+r.status);
+    const j=await r.json(), t=j.daily.time, p=j.daily.precipitation_sum;
+    const yearSum={}, monByYear={};
+    t.forEach((d,i)=>{const y=d.slice(0,4), mo=+d.slice(5,7)-1, v=p[i]||0;
+      yearSum[y]=(yearSum[y]||0)+v; (monByYear[y]||(monByYear[y]=Array(12).fill(0)))[mo]+=v;});
+    const years=Object.keys(yearSum).sort();
+    const curYear=years[years.length-1];
+    const lastFull=t[t.length-1].slice(5)==="12-31";
+    const completeYears=years.filter(y=>y!==curYear||lastFull);
+    // KPIs
+    const compVals=completeYears.map(y=>yearSum[y]);
+    const avg=compVals.reduce((a,b)=>a+b,0)/(compVals.length||1);
+    let wet=completeYears[0]||curYear, dry=completeYears[0]||curYear;
+    completeYears.forEach(y=>{if(yearSum[y]>yearSum[wet])wet=y; if(yearSum[y]<yearSum[dry])dry=y;});
+    const stats=[
+      [`Este año (${curYear})`, nf(yearSum[curYear],0)+" mm"],
+      ["Media anual", nf(avg,0)+" mm"],
+      [`Más lluvioso (${wet})`, nf(yearSum[wet],0)+" mm"],
+      [`Más seco (${dry})`, nf(yearSum[dry],0)+" mm"],
+    ];
+    document.getElementById("rainStats").innerHTML=stats.map(([l,v])=>`<div class="stat"><div class="s-l">${l}</div><div class="s-v">${v}</div></div>`).join("");
+    // barras anuales
+    const bars=years.map(y=>({label:y, v:yearSum[y], dim:(y===curYear&&!lastFull)}));
+    barChartG(document.getElementById("rainYearChart"),bars,{color:"var(--z-d1)",showVal:true});
+    // estacionalidad: climatología (años completos) vs año en curso
+    const clim=Array.from({length:12},(_,mo)=>{const vs=completeYears.map(y=>monByYear[y][mo]); return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:0;});
+    const lastMo=+t[t.length-1].slice(5,7);
+    const cur=monByYear[curYear].map((v,mo)=>(mo+1)<=lastMo?v:null);
+    document.getElementById("rainLegend").innerHTML=
+      `<span class="leg on"><span class="swatch" style="background:var(--accent);opacity:.5"></span>Media mensual histórica</span>`+
+      `<span class="leg on"><span class="swatch" style="background:var(--accent2)"></span>Año en curso (${curYear})</span>`;
+    rainSeasonChart(document.getElementById("rainMonthChart"),clim,cur,curYear);
+  }catch(e){ document.getElementById("rainStats").innerHTML=`<div class="stat"><div class="s-v" style="color:var(--bad)">Error pluviometría: ${e.message}</div></div>`; }
+}
+
+loadAirQuality();
+loadRain();

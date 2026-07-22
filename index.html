@@ -190,6 +190,40 @@ footer b{color:var(--ink)}
     </div>
   </section>
 
+  <section id="airsec">
+    <div class="sec-title"><h2>Calidad del aire</h2><span>concentración ambiental en tiempo real · modelo europeo CAMS (Open-Meteo)</span></div>
+    <p class="bnote" id="airNote">Cargando datos de calidad del aire…</p>
+    <div class="kpis" id="airKpis"></div>
+    <div class="chartcard" style="margin-top:16px">
+      <div class="c-head"><div>
+        <h3>Contaminantes · últimos 90 días</h3>
+        <p class="c-desc">Media diaria de partículas y gases (µg/m³) en el punto de Marbella. Fuente: modelo europeo CAMS vía Open-Meteo. A diferencia de los indicadores de arriba (depuración por vegetación), aquí se mide la <b>concentración real</b> en el aire que se respira.</p>
+      </div></div>
+      <div class="legend" id="airLegend"></div>
+      <div id="airChart"></div>
+    </div>
+  </section>
+
+  <section id="rainsec">
+    <div class="sec-title"><h2>Pluviometría</h2><span>precipitación histórica · reanálisis ERA5 (Open-Meteo)</span></div>
+    <div class="chartcard">
+      <div class="c-head"><div>
+        <h3>Precipitación anual (mm)</h3>
+        <p class="c-desc">Lluvia total acumulada por año en Marbella desde 2015. El año en curso (barra más clara) está incompleto. Fuente: reanálisis ERA5 vía Open-Meteo.</p>
+      </div></div>
+      <div class="stats" id="rainStats"></div>
+      <div id="rainYearChart"></div>
+    </div>
+    <div class="chartcard" style="margin-top:16px">
+      <div class="c-head"><div>
+        <h3>Estacionalidad · media mensual frente al año en curso</h3>
+        <p class="c-desc">Media histórica de cada mes (barras) frente a lo llovido este año (línea). Refleja el patrón mediterráneo de Marbella: veranos muy secos y lluvias concentradas en otoño e invierno.</p>
+      </div></div>
+      <div class="legend" id="rainLegend"></div>
+      <div id="rainMonthChart"></div>
+    </div>
+  </section>
+
   <section id="embsec">
     <div class="sec-title"><h2>Embalse de La Concepción</h2><span>reserva de agua del abastecimiento · volumen diario 2021–2025</span></div>
     <div class="chartcard">
