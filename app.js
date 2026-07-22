@@ -679,16 +679,37 @@ function buildBeachMap(){
   host.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Mapa de la costa de Marbella con evolución de la orilla">
     <rect x="0" y="0" width="${W}" height="${H}" fill="var(--panel)"/>
     <path d="${seaPoly}" fill="#8ec7e0" opacity=".45"/>
-    <path d="${coastLine}" fill="none" stroke="#3f88b5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="${coastLine}" fill="none" stroke="var(--muted)" stroke-width="1" stroke-dasharray="2 3" opacity=".7" stroke-linejoin="round"/>
     ${labels}
+    <g id="shoreG"></g>
     <g id="beachDots"></g>
   </svg>`;
-  const dotsG=host.querySelector("#beachDots"), NS="http://www.w3.org/2000/svg";
+  const NS="http://www.w3.org/2000/svg";
+  const shoreG=host.querySelector("#shoreG"), dotsG=host.querySelector("#beachDots");
+
+  // Base de orilla suavizada hacia el mar (una muestra por bin de x, la más al sur)
+  const binned={};
+  seaTop.forEach(p=>{const x=Math.round(X(p[1])/5)*5, y=Y(p[0]); if(!(x in binned)||y>binned[x]) binned[x]=y;});
+  const baseXY=Object.keys(binned).map(Number).sort((a,b)=>a-b).map(x=>[x,binned[x]]);
+  const nB=baseXY.length;
+  // longitud de arco + normal "hacia el mar" (+y) por vértice
+  const sArr=[0]; for(let i=1;i<nB;i++) sArr[i]=sArr[i-1]+Math.hypot(baseXY[i][0]-baseXY[i-1][0],baseXY[i][1]-baseXY[i-1][1]);
+  const norm=baseXY.map((p,i)=>{const a=baseXY[Math.max(0,i-1)],b=baseXY[Math.min(nB-1,i+1)];
+    const tx=b[0]-a[0],ty=b[1]-a[1],L=Math.hypot(tx,ty)||1; let nx=-ty/L,ny=tx/L; if(ny<0){nx=-nx;ny=-ny;} return [nx,ny];});
+  // posición (índice base + arco) de cada playa
+  const beachBI={}, beachS={};
+  geoB.forEach(z=>{const bx=X(BEACH_GEO[z][1]); let bi=0,best=1e9;
+    for(let i=0;i<nB;i++){const d=Math.abs(baseXY[i][0]-bx); if(d<best){best=d;bi=i;}}
+    beachBI[z]=bi; beachS[z]=sArr[bi];});
+
+  const K=1.5, MAXOFF=40;
+  const interp=(s,arr)=>{ if(s<=arr[0].s)return arr[0].v; if(s>=arr[arr.length-1].s)return arr[arr.length-1].v;
+    for(let i=1;i<arr.length;i++){ if(s<=arr[i].s){const a=arr[i-1],b=arr[i]; return a.v+(b.v-a.v)*((s-a.s)/((b.s-a.s)||1));} } return arr[arr.length-1].v; };
+
+  // marcadores (dots) por playa para hover
   const markers={}; let curFi=fis[fis.length-1];
-  geoB.forEach(z=>{const g=BEACH_GEO[z];
-    const c=document.createElementNS(NS,"circle");
-    c.setAttribute("cx",X(g[1]).toFixed(1)); c.setAttribute("cy",Y(g[0]).toFixed(1));
-    c.setAttribute("stroke","#fff"); c.setAttribute("stroke-width","1.2"); c.style.cursor="pointer";
+  geoB.forEach(z=>{ const c=document.createElementNS(NS,"circle");
+    c.setAttribute("r","3.2"); c.setAttribute("stroke","#fff"); c.setAttribute("stroke-width","1.1"); c.style.cursor="pointer";
     dotsG.appendChild(c); markers[z]=c;
     const tip=ev=>{const v=byFi[z][curFi],col=v==null?"#9ca3af":(v>=0?"#16a34a":"#dc2626");
       showTip(`<b>${nameOf(z)}</b><div class="row">${fmtDate(curFi)}: <b style="color:${col}">${v==null?"sin dato":nf(v,1)+" m"}</b>${v==null?"":" · "+(v>=0?"avance":"retroceso")}</div>`,ev.clientX,ev.clientY);};
@@ -698,9 +719,22 @@ function buildBeachMap(){
   const slider=document.getElementById("mapSlider"), dateLbl=document.getElementById("mapDate");
   slider.min=0; slider.max=fis.length-1; slider.value=fis.length-1;
   function render(idx){ curFi=fis[idx]; dateLbl.textContent=fmtDate(curFi);
-    geoB.forEach(z=>{const v=byFi[z][curFi],c=markers[z],col=v==null?"#9ca3af":(v>=0?"#16a34a":"#dc2626");
-      c.setAttribute("fill",col); c.setAttribute("fill-opacity",v==null?".5":".9");
-      c.setAttribute("r", v==null?"4":Math.min(15,4+Math.sqrt(Math.abs(v))*1.7).toFixed(1));
+    const active=geoB.map(z=>({s:beachS[z],v:byFi[z][curFi]})).filter(b=>b.v!=null).sort((a,b)=>a.s-b.s);
+    if(active.length){
+      const off=baseXY.map((p,i)=>{const v=interp(sArr[i],active), d=Math.max(-MAXOFF,Math.min(MAXOFF,v*K));
+        return [p[0]+norm[i][0]*d, p[1]+norm[i][1]*d, v];});
+      let greenD="",redD="";
+      for(let i=0;i<off.length-1;i++){const a=off[i],b=off[i+1],seg=`M${a[0].toFixed(1)} ${a[1].toFixed(1)} L${b[0].toFixed(1)} ${b[1].toFixed(1)} `;
+        ((a[2]+b[2])/2>=0?greenD+=seg:redD+=seg);}
+      shoreG.innerHTML=`<path d="${greenD}" fill="none" stroke="#16a34a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`+
+                       `<path d="${redD}" fill="none" stroke="#dc2626" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    } else shoreG.innerHTML="";
+    geoB.forEach(z=>{const v=byFi[z][curFi],c=markers[z],bi=beachBI[z];
+      const d = v==null?0:Math.max(-MAXOFF,Math.min(MAXOFF,v*K));
+      c.setAttribute("cx",(baseXY[bi][0]+norm[bi][0]*d).toFixed(1));
+      c.setAttribute("cy",(baseXY[bi][1]+norm[bi][1]*d).toFixed(1));
+      c.setAttribute("fill",v==null?"#9ca3af":(v>=0?"#16a34a":"#dc2626"));
+      c.setAttribute("fill-opacity",v==null?".5":".95");
     });
   }
   let timer=null; const btn=document.getElementById("mapPlay");

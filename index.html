@@ -249,7 +249,7 @@ footer b{color:var(--ink)}
 
   <section id="mapsec">
     <div class="sec-title"><h2>Mapa de la costa · evolución de la orilla</h2><span>mueve la fecha y observa el avance o retroceso de cada playa</span></div>
-    <p class="bnote">Cada punto es una playa de Marbella en su ubicación real (anclada a OpenStreetMap). El <b>color</b> y el <b>tamaño</b> reflejan la posición de la orilla ese mes según la serie de teledetección: <b style="color:var(--good)">verde = avance/acumulación de arena</b>, <b style="color:var(--bad)">rojo = retroceso/erosión</b>. Los datos son reales del panel; la posición de algunas playas menores es aproximada sobre la línea de costa.</p>
+    <p class="bnote">La <b>línea de orilla</b> se dibuja sobre la costa real de Marbella (OpenStreetMap) y se <b>desplaza</b> ese mes según la serie de teledetección: hacia el <b style="color:var(--good)">mar en verde donde la playa avanza/acumula arena</b> y hacia <b style="color:var(--bad)">tierra en rojo donde retrocede/se erosiona</b>. La línea discontinua es la costa de referencia. El desplazamiento va <b>exagerado</b> para que sea visible (los cambios reales son de pocos metros); los valores exactos, al pasar el cursor. Datos reales del panel.</p>
     <div class="chartcard">
       <div class="mapbar" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px">
         <button class="mapbtn" id="mapPlay" aria-label="Reproducir"></button>
@@ -258,10 +258,10 @@ footer b{color:var(--ink)}
       </div>
       <div id="beachMap" style="height:470px;border-radius:12px;overflow:hidden;border:1px solid var(--line)"></div>
       <div class="maplegend">
-        <span><span class="dotm" style="background:var(--good)"></span>Avance de la orilla</span>
-        <span><span class="dotm" style="background:var(--bad)"></span>Retroceso / erosión</span>
+        <span><span class="dotm" style="background:var(--good)"></span>Orilla avanza (hacia el mar)</span>
+        <span><span class="dotm" style="background:var(--bad)"></span>Orilla retrocede (erosión)</span>
         <span><span class="dotm" style="background:#9ca3af"></span>Sin dato ese mes</span>
-        <span style="margin-left:auto">Tamaño del punto ∝ magnitud del cambio</span>
+        <span style="margin-left:auto">Desplazamiento ∝ magnitud (exagerado)</span>
       </div>
     </div>
   </section>
