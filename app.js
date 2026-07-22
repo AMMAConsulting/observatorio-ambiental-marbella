@@ -616,7 +616,7 @@ async function loadRain(){
 loadAirQuality();
 loadRain();
 
-/* ================= MAPA DE LA COSTA · Leaflet + slider temporal ================= */
+/* ================= MAPA DE LA COSTA · SVG propio + slider temporal (sin CDN) ================= */
 /* Coordenadas: 16 playas ancladas a OpenStreetMap (natural=beach, vía Overpass);
    las menores sin ficha propia en OSM se sitúan por interpolación sobre la costa
    real, en orden geográfico. Los DATOS de orilla son los reales del panel. */
@@ -652,49 +652,63 @@ const BEACH_GEO = {
 const ICON_PLAY=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
 const ICON_PAUSE=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>`;
 
+/* Línea de costa real de Marbella (OpenStreetMap natural=coastline, simplificada) */
+const COAST=[[36.46163,-5.02744],[36.46067,-5.0255],[36.46058,-5.02392],[36.46183,-5.01606],[36.46104,-5.01315],[36.45947,-5.01117],[36.45908,-5.01006],[36.45942,-5.00626],[36.46001,-5.00495],[36.46434,-4.99921],[36.46581,-4.99604],[36.47094,-4.98857],[36.47783,-4.97726],[36.47835,-4.97508],[36.47832,-4.97182],[36.48078,-4.96892],[36.48189,-4.96654],[36.48306,-4.96359],[36.48393,-4.96129],[36.48505,-4.95879],[36.48523,-4.95653],[36.48596,-4.9544],[36.48865,-4.95058],[36.48807,-4.94923],[36.48727,-4.94946],[36.48869,-4.94782],[36.49003,-4.94843],[36.49253,-4.94508],[36.4932,-4.94504],[36.49611,-4.94161],[36.49942,-4.93583],[36.5001,-4.93333],[36.50013,-4.92976],[36.49988,-4.92591],[36.50083,-4.92373],[36.50182,-4.92168],[36.50558,-4.91203],[36.50617,-4.90157],[36.5066,-4.90051],[36.50713,-4.89572],[36.50674,-4.8923],[36.50683,-4.89135],[36.50633,-4.88979],[36.50643,-4.88825],[36.50601,-4.88745],[36.50688,-4.88193],[36.50723,-4.88063],[36.50759,-4.87944],[36.50736,-4.87732],[36.50775,-4.87579],[36.50793,-4.87456],[36.50793,-4.87337],[36.50661,-4.87241],[36.50732,-4.86755],[36.50706,-4.85862],[36.50649,-4.85437],[36.50494,-4.84794],[36.50405,-4.84499],[36.50275,-4.84246],[36.50267,-4.83997],[36.5018,-4.83622],[36.49832,-4.81324],[36.48955,-4.77577],[36.48568,-4.7567],[36.48494,-4.75093],[36.48483,-4.74511],[36.48674,-4.73117],[36.48659,-4.71956],[36.4878,-4.71526],[36.48739,-4.71153],[36.48809,-4.71064],[36.49043,-4.70452]];
+
 function buildBeachMap(){
   const host=document.getElementById("beachMap");
-  if(typeof L==="undefined"){ host.innerHTML="<p class='c-desc' style='padding:20px'>No se pudo cargar el mapa (Leaflet).</p>"; return; }
   const geoB = beachZones.filter(z=>BEACH_GEO[z] && SER["playa"][z] && SER["playa"][z].length);
   if(!geoB.length){ host.innerHTML="<p class='c-desc' style='padding:20px'>Sin datos de playa.</p>"; return; }
-  const map=L.map(host,{scrollWheelZoom:false,zoomControl:true,preferCanvas:true}).setView([36.502,-4.86],12);
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-    {attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · © <a href="https://carto.com/attributions">CARTO</a>',maxZoom:19,subdomains:"abcd"}).addTo(map);
-  // fi disponibles + índice fi->valor por playa
   const fiset=new Set(), byFi={};
   geoB.forEach(z=>{ byFi[z]={}; SER["playa"][z].forEach(d=>{fiset.add(d.fi); byFi[z][d.fi]=d.v;}); });
   const fis=[...fiset].sort((a,b)=>a-b);
-  const colorFor=v=> v==null?"#9ca3af":(v>=0?"#16a34a":"#dc2626");
   const nameOf=z=>z.replace(/^Playa (de la |de las |de los |de |del |el |los )?/i,"");
-  const markers={};
-  geoB.forEach(z=>{ markers[z]=L.circleMarker(BEACH_GEO[z],{radius:7,weight:1.4,color:"#fff",fillColor:"#16a34a",fillOpacity:.9}).addTo(map); });
-  map.fitBounds(geoB.map(z=>BEACH_GEO[z]),{padding:[34,34]});
-  setTimeout(()=>map.invalidateSize(),200);
+
+  // proyección equirectangular (aspecto corregido para la latitud de Marbella)
+  const W=960,H=338, lonMin=-5.012, lonMax=-4.726, latMax=36.517, latMin=36.436;
+  const X=lo=>(lo-lonMin)/(lonMax-lonMin)*W;
+  const Y=la=>(latMax-la)/(latMax-latMin)*H;
+  const cv=COAST.filter(p=>p[1]>=lonMin-0.03 && p[1]<=lonMax+0.03);
+  const coastLine=cv.map((p,i)=>(i?"L":"M")+X(p[1]).toFixed(1)+" "+Y(p[0]).toFixed(1)).join(" ");
+  const seaTop=cv.slice().sort((a,b)=>a[1]-b[1]);
+  const seaPoly="M"+seaTop.map(p=>X(p[1]).toFixed(1)+" "+Y(p[0]).toFixed(1)).join(" L")+` L${W} ${H} L0 ${H} Z`;
+  const LAB=[["San Pedro de Alcántara",-4.9818,36.4785,10],["Puerto Banús",-4.9440,36.4930,10],["MARBELLA",-4.8890,36.5150,13],["Los Monteros",-4.8384,36.5100,10],["Cabopino",-4.7422,36.4855,10]];
+  const labels=LAB.map(([t,lo,la,fs])=>`<text x="${X(lo).toFixed(1)}" y="${Y(la).toFixed(1)}" text-anchor="middle" style="fill:var(--muted);font-size:${fs}px;font-weight:${fs>11?'800':'600'};letter-spacing:.4px;paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round">${t}</text>`).join("");
+
+  host.style.height="auto";
+  host.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Mapa de la costa de Marbella con evolución de la orilla">
+    <rect x="0" y="0" width="${W}" height="${H}" fill="var(--panel)"/>
+    <path d="${seaPoly}" fill="#8ec7e0" opacity=".45"/>
+    <path d="${coastLine}" fill="none" stroke="#3f88b5" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${labels}
+    <g id="beachDots"></g>
+  </svg>`;
+  const dotsG=host.querySelector("#beachDots"), NS="http://www.w3.org/2000/svg";
+  const markers={}; let curFi=fis[fis.length-1];
+  geoB.forEach(z=>{const g=BEACH_GEO[z];
+    const c=document.createElementNS(NS,"circle");
+    c.setAttribute("cx",X(g[1]).toFixed(1)); c.setAttribute("cy",Y(g[0]).toFixed(1));
+    c.setAttribute("stroke","#fff"); c.setAttribute("stroke-width","1.2"); c.style.cursor="pointer";
+    dotsG.appendChild(c); markers[z]=c;
+    const tip=ev=>{const v=byFi[z][curFi],col=v==null?"#9ca3af":(v>=0?"#16a34a":"#dc2626");
+      showTip(`<b>${nameOf(z)}</b><div class="row">${fmtDate(curFi)}: <b style="color:${col}">${v==null?"sin dato":nf(v,1)+" m"}</b>${v==null?"":" · "+(v>=0?"avance":"retroceso")}</div>`,ev.clientX,ev.clientY);};
+    c.addEventListener("mouseenter",tip); c.addEventListener("mousemove",tip); c.addEventListener("mouseleave",hideTip);
+  });
 
   const slider=document.getElementById("mapSlider"), dateLbl=document.getElementById("mapDate");
   slider.min=0; slider.max=fis.length-1; slider.value=fis.length-1;
-  function render(idx){
-    const fi=fis[idx]; dateLbl.textContent=fmtDate(fi);
-    geoB.forEach(z=>{ const v=byFi[z][fi], mk=markers[z], col=colorFor(v);
-      if(v==null){ mk.setStyle({fillColor:col,radius:5,fillOpacity:.5}); }
-      else { mk.setStyle({fillColor:col,radius:Math.min(22,5+Math.sqrt(Math.abs(v))*2.3),fillOpacity:.85}); }
-      const txt = v==null ? "sin dato" : `<b style="color:${col}">${nf(v,1)} m</b> · ${v>=0?"avance":"retroceso"}`;
-      mk.bindTooltip(`${nameOf(z)}`,{direction:"top"});
-      mk.bindPopup(`<b>${nameOf(z)}</b><br>${fmtDate(fi)}: ${txt}`);
+  function render(idx){ curFi=fis[idx]; dateLbl.textContent=fmtDate(curFi);
+    geoB.forEach(z=>{const v=byFi[z][curFi],c=markers[z],col=v==null?"#9ca3af":(v>=0?"#16a34a":"#dc2626");
+      c.setAttribute("fill",col); c.setAttribute("fill-opacity",v==null?".5":".9");
+      c.setAttribute("r", v==null?"4":Math.min(15,4+Math.sqrt(Math.abs(v))*1.7).toFixed(1));
     });
   }
-  slider.addEventListener("input",()=>{ stop(); render(+slider.value); });
-  render(fis.length-1);
-
-  // Reproducir / pausar
   let timer=null; const btn=document.getElementById("mapPlay");
   function paint(){ btn.innerHTML=(timer?ICON_PAUSE:ICON_PLAY)+"<span>"+(timer?"Pausar":"Reproducir")+"</span>"; }
-  function stop(){ if(timer){clearInterval(timer);timer=null;paint();} }
-  btn.addEventListener("click",()=>{
-    if(timer){ stop(); return; }
-    timer=setInterval(()=>{ let v=+slider.value+1; if(v>+slider.max) v=0; slider.value=v; render(v); },750);
-    paint();
-  });
-  paint();
+  function stopPlay(){ if(timer){clearInterval(timer);timer=null;paint();} }
+  slider.addEventListener("input",()=>{ stopPlay(); render(+slider.value); });
+  btn.addEventListener("click",()=>{ if(timer){stopPlay();return;}
+    timer=setInterval(()=>{ let v=+slider.value+1; if(v>+slider.max) v=0; slider.value=v; render(v); },750); paint(); });
+  render(fis.length-1); paint();
 }
 buildBeachMap();
