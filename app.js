@@ -142,6 +142,15 @@ function sparkline(data){
     <path d="${dd}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>
     <circle cx="${X(data.length-1)}" cy="${Y(vs[vs.length-1])}" r="2.6" fill="var(--accent)"/></svg>`;
 }
+/* ---------- Iconos SVG por categoría (línea, sin emojis) ---------- */
+const CAT_ICON={
+  verde:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg>`,
+  aire:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/></svg>`,
+  clima:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4.5V14a4 4 0 1 1-4 0V4.5a2 2 0 0 1 4 0Z"/></svg>`,
+  territorio:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4v18"/><path d="M19 21V11l-7-4"/></svg>`
+};
+const catIcon=cat=>CAT_ICON[cat]||CAT_ICON.verde;
+
 function buildKPIs(){
   const box=document.getElementById("kpis"); box.innerHTML="";
   KPI_LIST.forEach(code=>{
@@ -160,7 +169,7 @@ function buildKPIs(){
       sub=`vs ${fmtDate(pyFi)}`;
     }
     const el=document.createElement("div"); el.className="kpi";
-    el.innerHTML=`<div class="k-top"><span class="k-name">${cfg.name}</span><span class="k-ic">${cfg.ic}</span></div>
+    el.innerHTML=`<div class="k-top"><span class="k-name">${cfg.name}</span><span class="k-ic">${catIcon(cfg.cat)}</span></div>
       <div class="k-val">${nf(last.v,cfg.dec)}</div><span class="k-unit">${cfg.unit} · ${fmtDate(last.fi)}</span>
       <div class="k-foot">${trend}<span class="k-sub">${sub}</span></div>
       ${sparkline(s.slice(-24))}`;
@@ -405,7 +414,9 @@ function buildEmbalse(){
 
 /* ---------- Theme ---------- */
 const themeBtn=document.getElementById("themeBtn");
-function applyTheme(t){document.documentElement.dataset.theme=t; themeBtn.textContent=t==="dark"?"☀️":"🌙";
+const ICON_MOON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
+const ICON_SUN=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`;
+function applyTheme(t){document.documentElement.dataset.theme=t; themeBtn.innerHTML=t==="dark"?ICON_SUN:ICON_MOON;
   try{localStorage.setItem("obsTheme",t)}catch(e){}
   // redibujar para refrescar var(--color) resueltos en SVG dots
   if(activeCode) drawExplorer();
