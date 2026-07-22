@@ -615,3 +615,86 @@ async function loadRain(){
 
 loadAirQuality();
 loadRain();
+
+/* ================= MAPA DE LA COSTA · Leaflet + slider temporal ================= */
+/* Coordenadas: 16 playas ancladas a OpenStreetMap (natural=beach, vía Overpass);
+   las menores sin ficha propia en OSM se sitúan por interpolación sobre la costa
+   real, en orden geográfico. Los DATOS de orilla son los reales del panel. */
+const BEACH_GEO = {
+  "Playa Guadalmina":[36.46000,-5.00200],
+  "Playa de Linda Vista":[36.46950,-4.98800],
+  "Playa de San Pedro de Alcantara":[36.47404,-4.98179],
+  "Playa de cortijo blanco":[36.47800,-4.97600],
+  "Playa El rodeito":[36.48100,-4.96700],
+  "Playa del Duque":[36.48354,-4.96152],
+  "Playa Puerto Banús":[36.49320,-4.94405],
+  "Playa Nueva Andalucía":[36.49150,-4.94850],
+  "Playa Rio Verde":[36.49750,-4.93400],
+  "Playa de Nagueles":[36.50293,-4.91907],
+  "Playa Puente Romano":[36.50480,-4.91300],
+  "Playa Casablanca":[36.50575,-4.91127],
+  "Playa de la Fontanilla":[36.50417,-4.90828],
+  "Playa del Faro":[36.50662,-4.89150],
+  "Playa de Venus":[36.50659,-4.88412],
+  "Playa de Bajadilla":[36.50756,-4.87770],
+  "Playa del Cable":[36.50741,-4.86608],
+  "Playa el Pinillo":[36.50650,-4.85800],
+  "Playa de Rio Real":[36.50400,-4.84800],
+  "Playa los Monteros":[36.50248,-4.83838],
+  "Playa del Alicate":[36.49743,-4.80990],
+  "Playa del Real de Zaragoza":[36.49450,-4.79750],
+  "Playa de las Chapas":[36.49250,-4.78750],
+  "Playa de las Cañas":[36.49050,-4.77900],
+  "Playa de Artola":[36.49001,-4.77178],
+  "Playa de Cabopino":[36.48422,-4.74221],
+  "Playa de Calahonda":[36.48562,-4.73575],
+};
+const ICON_PLAY=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
+const ICON_PAUSE=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>`;
+
+function buildBeachMap(){
+  const host=document.getElementById("beachMap");
+  if(typeof L==="undefined"){ host.innerHTML="<p class='c-desc' style='padding:20px'>No se pudo cargar el mapa (Leaflet).</p>"; return; }
+  const geoB = beachZones.filter(z=>BEACH_GEO[z] && SER["playa"][z] && SER["playa"][z].length);
+  if(!geoB.length){ host.innerHTML="<p class='c-desc' style='padding:20px'>Sin datos de playa.</p>"; return; }
+  const map=L.map(host,{scrollWheelZoom:false,zoomControl:true,preferCanvas:true}).setView([36.502,-4.86],12);
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    {attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · © <a href="https://carto.com/attributions">CARTO</a>',maxZoom:19,subdomains:"abcd"}).addTo(map);
+  // fi disponibles + índice fi->valor por playa
+  const fiset=new Set(), byFi={};
+  geoB.forEach(z=>{ byFi[z]={}; SER["playa"][z].forEach(d=>{fiset.add(d.fi); byFi[z][d.fi]=d.v;}); });
+  const fis=[...fiset].sort((a,b)=>a-b);
+  const colorFor=v=> v==null?"#9ca3af":(v>=0?"#16a34a":"#dc2626");
+  const nameOf=z=>z.replace(/^Playa (de la |de las |de los |de |del |el |los )?/i,"");
+  const markers={};
+  geoB.forEach(z=>{ markers[z]=L.circleMarker(BEACH_GEO[z],{radius:7,weight:1.4,color:"#fff",fillColor:"#16a34a",fillOpacity:.9}).addTo(map); });
+  map.fitBounds(geoB.map(z=>BEACH_GEO[z]),{padding:[34,34]});
+  setTimeout(()=>map.invalidateSize(),200);
+
+  const slider=document.getElementById("mapSlider"), dateLbl=document.getElementById("mapDate");
+  slider.min=0; slider.max=fis.length-1; slider.value=fis.length-1;
+  function render(idx){
+    const fi=fis[idx]; dateLbl.textContent=fmtDate(fi);
+    geoB.forEach(z=>{ const v=byFi[z][fi], mk=markers[z], col=colorFor(v);
+      if(v==null){ mk.setStyle({fillColor:col,radius:5,fillOpacity:.5}); }
+      else { mk.setStyle({fillColor:col,radius:Math.min(22,5+Math.sqrt(Math.abs(v))*2.3),fillOpacity:.85}); }
+      const txt = v==null ? "sin dato" : `<b style="color:${col}">${nf(v,1)} m</b> · ${v>=0?"avance":"retroceso"}`;
+      mk.bindTooltip(`${nameOf(z)}`,{direction:"top"});
+      mk.bindPopup(`<b>${nameOf(z)}</b><br>${fmtDate(fi)}: ${txt}`);
+    });
+  }
+  slider.addEventListener("input",()=>{ stop(); render(+slider.value); });
+  render(fis.length-1);
+
+  // Reproducir / pausar
+  let timer=null; const btn=document.getElementById("mapPlay");
+  function paint(){ btn.innerHTML=(timer?ICON_PAUSE:ICON_PLAY)+"<span>"+(timer?"Pausar":"Reproducir")+"</span>"; }
+  function stop(){ if(timer){clearInterval(timer);timer=null;paint();} }
+  btn.addEventListener("click",()=>{
+    if(timer){ stop(); return; }
+    timer=setInterval(()=>{ let v=+slider.value+1; if(v>+slider.max) v=0; slider.value=v; render(v); },750);
+    paint();
+  });
+  paint();
+}
+buildBeachMap();
