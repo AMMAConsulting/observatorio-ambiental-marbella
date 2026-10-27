@@ -428,7 +428,25 @@ themeBtn.addEventListener("click",()=>applyTheme(document.documentElement.datase
 buildKPIs();
 buildCatbox();
 selectIndicator("cobveg");
-buildEmbalse();
+// El volumen del embalse se completa en vivo con el Observatorio hídrico de La Concepción
+// (REDIAM, actualización diaria); si no carga, se pinta la serie incrustada.
+(function(){
+  const s=document.createElement("script");
+  s.src="https://josehino.github.io/observatorio-hidrico-concepcion/data/data.js";
+  s.onload=()=>{
+    try{
+      const e=window.DATOS&&window.DATOS.embalse_diario, rows=OBS.embalse.rows;
+      const last=rows[rows.length-1][0], t0=Date.parse(e.inicio+"T00:00:00Z");
+      e.volumen.forEach((v,i)=>{
+        const f=new Date(t0+i*864e5).toISOString().slice(0,10);
+        if(f>last&&v!=null) rows.push([f,v,e.porcentaje[i]]);
+      });
+    }catch(err){console.warn("embalse en vivo:",err);}
+    buildEmbalse();
+  };
+  s.onerror=()=>buildEmbalse();
+  document.head.appendChild(s);
+})();
 buildBeaches();
 
 /* ================= DATOS EN VIVO · Open-Meteo (CORS, sin clave) ================= */

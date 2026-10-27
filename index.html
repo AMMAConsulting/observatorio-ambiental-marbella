@@ -153,6 +153,7 @@ footer b{color:var(--ink)}
   .catbox{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px}
   .beachgrid{grid-template-columns:1fr}
 }
+.c-src{font-size:11.5px;color:var(--muted);margin:10px 0 0;line-height:1.4}.c-src a{color:inherit;text-decoration:underline}
 </style>
 </head>
 <body>
@@ -195,6 +196,7 @@ footer b{color:var(--ink)}
         <div class="stats" id="cStats"></div>
         <div id="cChart"></div>
         <div class="legend" id="cLegend"></div>
+        <p class="c-src">Fuente: indicadores de teledetección Dinapsis / Hidralia (Agenda Urbana 2030 · Ayuntamiento de Marbella, DTI); datos internos sin enlace público.</p>
       </div>
     </div>
   </section>
@@ -210,6 +212,7 @@ footer b{color:var(--ink)}
       </div></div>
       <div class="legend" id="airLegend"></div>
       <div id="airChart"></div>
+      <p class="c-src">Fuente: <a href="https://open-meteo.com/en/docs/air-quality-api" target="_blank" rel="noopener">modelo europeo CAMS vía Open-Meteo (Air Quality API)</a>.</p>
     </div>
   </section>
 
@@ -222,6 +225,7 @@ footer b{color:var(--ink)}
       </div></div>
       <div class="stats" id="rainStats"></div>
       <div id="rainYearChart"></div>
+      <p class="c-src">Fuente: <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noopener">reanálisis ERA5 vía Open-Meteo</a>.</p>
     </div>
     <div class="chartcard" style="margin-top:16px">
       <div class="c-head"><div>
@@ -230,11 +234,12 @@ footer b{color:var(--ink)}
       </div></div>
       <div class="legend" id="rainLegend"></div>
       <div id="rainMonthChart"></div>
+      <p class="c-src">Fuente: <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noopener">reanálisis ERA5 vía Open-Meteo</a>.</p>
     </div>
   </section>
 
   <section id="embsec">
-    <div class="sec-title"><h2>Embalse de La Concepción</h2><span>reserva de agua del abastecimiento · volumen diario 2021–2025</span></div>
+    <div class="sec-title"><h2>Embalse de La Concepción</h2><span>reserva de agua del abastecimiento · volumen diario desde 2021, al día</span></div>
     <div class="chartcard">
       <div class="c-head">
         <div>
@@ -244,6 +249,7 @@ footer b{color:var(--ink)}
       </div>
       <div class="stats" id="embStats"></div>
       <div id="embChart"></div>
+      <p class="c-src">Fuente: <a href="https://portalrediam.cica.es/embalses/" target="_blank" rel="noopener">REDIAM · Junta de Andalucía</a>, al día a través del <a href="https://josehino.github.io/observatorio-hidrico-concepcion/" target="_blank" rel="noopener">Observatorio hídrico de La Concepción</a>.</p>
     </div>
   </section>
 
@@ -263,6 +269,7 @@ footer b{color:var(--ink)}
         <span><span class="dotm" style="background:#9ca3af"></span>Sin dato ese mes</span>
         <span style="margin-left:auto">Desplazamiento ∝ magnitud (exagerado)</span>
       </div>
+      <p class="c-src">Fuente: indicadores de teledetección Dinapsis / Hidralia (Agenda Urbana 2030 · Ayuntamiento de Marbella, DTI); datos internos sin enlace público · costa de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>.</p>
     </div>
   </section>
 
@@ -273,11 +280,13 @@ footer b{color:var(--ink)}
       <h3 style="font-size:15px;margin:0 0 4px">Estado actual por playa <span id="bDate" style="color:var(--muted);font-weight:500;font-size:12px"></span></h3>
       <p class="c-desc" style="margin:0 0 4px">Ordenadas de mayor avance a mayor retroceso. Pulsa una para ir a su histórico.</p>
       <div class="scrollY" id="bBars"></div>
+      <p class="c-src">Fuente: indicadores de teledetección Dinapsis / Hidralia (Agenda Urbana 2030 · Ayuntamiento de Marbella, DTI); datos internos sin enlace público.</p>
     </div>
     <div class="chartcard">
       <h3 style="font-size:15px;margin:0 0 2px">Histórico por playa · posición de la orilla (m)</h3>
       <p class="c-desc" style="margin:0 0 6px">Serie mensual completa 2022–2026 de cada playa. La línea discontinua es la referencia (0 m): por encima = avance de arena, por debajo = retroceso/erosión.</p>
       <div class="smgrid" id="bGrid"></div>
+      <p class="c-src">Fuente: indicadores de teledetección Dinapsis / Hidralia (Agenda Urbana 2030 · Ayuntamiento de Marbella, DTI); datos internos sin enlace público.</p>
     </div>
   </section>
 
