@@ -2,7 +2,7 @@
 
 Panel web de indicadores ambientales del municipio de Marbella para el marco de la **Agenda Urbana 2030**, a partir de datos de **teledetección (Dinapsis / Hidralia)** integrados por el DTI del Ayuntamiento de Marbella.
 
-🔗 **Live:** https://josehino.github.io/observatorio-ambiental-marbella/
+🔗 **Live:** https://ammaconsulting.github.io/observatorio-ambiental-marbella/
 
 ## Contenido
 - **Panorama del municipio:** KPIs con variación interanual (cobertura vegetal, superficie verde por habitante, suelo sellado, temperatura superficial, isla de calor, absorción de CO₂).

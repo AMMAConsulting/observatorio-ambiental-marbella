@@ -432,7 +432,7 @@ selectIndicator("cobveg");
 // (REDIAM, actualización diaria); si no carga, se pinta la serie incrustada.
 (function(){
   const s=document.createElement("script");
-  s.src="https://josehino.github.io/observatorio-hidrico-concepcion/data/data.js";
+  s.src="https://ammaconsulting.github.io/observatorio-hidrico-concepcion/data/data.js";
   s.onload=()=>{
     try{
       const e=window.DATOS&&window.DATOS.embalse_diario, rows=OBS.embalse.rows;
